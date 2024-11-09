@@ -35,4 +35,5 @@ Route::group(['middleware' => ['auth.jwt'], 'prefix' => 'v1'], function ($router
     Route::post('/payments/create', [PaymentController::class, 'store']);
     Route::post('/payments/get-payments', [PaymentController::class, 'index']);
     Route::post('/payments/get-total-payment', [PaymentController::class, 'getTotalPayment']);
+    Route::get('/payments/get-payment-details/{paymentId}', [PaymentController::class, 'show']);
 });

@@ -7,9 +7,11 @@ use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Stmt\TryCatch;
 
 class PaymentController extends Controller
 {
+    public static$monthTotal = 0;
     /**
      * Display a listing of the resource.
      */
@@ -67,11 +69,19 @@ class PaymentController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified resource.ap
      */
-    public function show(Payment $payment)
+    public function show(String $paymentId)
     {
-        //
+        if (isset($paymentId) && !empty($paymentId)) {
+            $payment = Payment::find($paymentId);
+            if ($payment) {
+                return response()->json(['message' => 'success', 'data' => $payment], 200);
+            }
+            return response()->json(['message' => 'payment not found'], 404);
+        } else {
+            return response()->json(['message' => 'payment id is required'], 400);
+        }
     }
 
     /**
@@ -108,6 +118,29 @@ class PaymentController extends Controller
             $today_date = Carbon::today();
             $total = Payment::whereDate('payment_date', $today_date)->sum('amount');
             return response()->json(['message' => 'success', 'total' => $total], 200);
+        } else if ($total_type == 'month') {
+            if (isset($request->date) && !empty($request->date)) {
+                $date = $request->date;
+                $month=$date["month"];
+                $year=$date["year"];
+                try {
+                    $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+                    $endOfMonth = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+                    $total=Payment::whereBetween('payment_date', [$startOfMonth, $endOfMonth])->sum('amount');
+                    return response()->json(['message' => 'success', 'total' => $total], 200);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+
+                return $endOfMonth;
+            }
         }
+    }
+
+    public function getBalance(Request $request){
+        $limit = 23000;
+        $expensed = $request->has('expensed') ? $request->expensed : 0;
+        $balance = $limit - $expensed;
+        return response()->json(['message' => 'success', 'balance' => $balance], 200);
     }
 }
