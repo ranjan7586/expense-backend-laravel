@@ -42,19 +42,25 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+        try {
+            if (!Auth::validate($credentials)) {
+                return response()->json(['error' => 'Invalid credentials'], 401);
+            }
 
-        if (!Auth::validate($credentials)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
+            $token = Auth::attempt($credentials);
+
+            $user_details = Auth::user();
+            return response()->json([
+                'success' => true,
+                'token' => $token,
+                'user' => $user_details
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => "server error",
+            ], 500);
         }
-
-        $token = Auth::attempt($credentials);
-
-        $user_details = Auth::user();
-        return response()->json([
-            'success' => true,
-            'token' => $token,
-            'user' => $user_details
-        ]);
     }
 
 

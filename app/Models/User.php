@@ -66,4 +66,9 @@ class User extends Authenticatable implements JWTSubject
             $model->id = (string) Uuid::uuid4();
         });
     }
+
+    public function balance()
+    {
+        return $this->hasOne(Balance::class, 'user_id', 'id');
+    }
 }
